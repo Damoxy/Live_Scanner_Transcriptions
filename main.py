@@ -264,7 +264,6 @@ def main():
 
     # LLM extraction with progress bar
     tqdm.pandas(desc="LLM extracting address + keywords")
-    df_prefiltered=df_prefiltered.head(2)
     results = df_prefiltered["transcription"].progress_apply(extract_location_and_keywords)
     df_prefiltered["address"] = results.apply(lambda x: x[0])
     df_prefiltered["extracted_keywords"] = results.apply(lambda x: x[1])
