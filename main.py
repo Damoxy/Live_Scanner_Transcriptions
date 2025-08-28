@@ -58,6 +58,48 @@ logger.addHandler(handler)
 logger.propagate = False
 
 # ----------------------------
+# Custom Google Sheet Logging Handler
+# ----------------------------
+class GoogleSheetHandler(logging.Handler):
+    def __init__(self, sheet_url, worksheet_name, creds_path):
+        super().__init__()
+        self.sheet_url = sheet_url
+        self.worksheet_name = worksheet_name
+        self.creds_path = creds_path
+
+        # Initialize Google Sheet client
+        scope = ["https://spreadsheets.google.com/feeds","https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+        self.client = gspread.authorize(creds)
+        self.sheet = self.client.open_by_url(sheet_url)
+
+        # Ensure worksheet exists
+        try:
+            self.worksheet = self.sheet.worksheet(self.worksheet_name)
+        except gspread.WorksheetNotFound:
+            self.worksheet = self.sheet.add_worksheet(title=self.worksheet_name, rows="100", cols="10")
+            # Create headers
+            self.worksheet.append_row(["timestamp", "level", "message"])
+
+    def emit(self, record):
+        try:
+            log_entry = [
+                dt.datetime.fromtimestamp(record.created).strftime("%Y-%m-%d %H:%M:%S"),
+                record.levelname,
+                record.getMessage()
+            ]
+            self.worksheet.append_row(log_entry, value_input_option="RAW")
+        except Exception as e:
+            print(f"Failed to log to Google Sheet: {e}")
+
+# Attach Google Sheet logger
+if GOOGLE_SHEET_CREDS and SPREADSHEET_URL:
+    gs_handler = GoogleSheetHandler(SPREADSHEET_URL, "log", GOOGLE_SHEET_CREDS)
+    gs_handler.setLevel(logging.INFO)
+    gs_handler.setFormatter(formatter)
+    logger.addHandler(gs_handler)
+
+# ----------------------------
 # Constants & Regex
 # ----------------------------
 KEYWORD_LIST = [
@@ -251,7 +293,7 @@ def main():
     logger.info("Loading spaCy model 'en_core_web_sm'...")
     nlp = spacy.load("en_core_web_sm")
 
-    # Prefilter addresses with progress bar
+    # Prefilter addresses 
     tqdm.pandas(desc="Prefilter addresses")
     df["prefilter_address"] = df["transcription"].progress_apply(lambda x: extract_address_prefilter(x, nlp))
     df_prefiltered = df[
@@ -262,7 +304,7 @@ def main():
     ].copy()
     logger.info(f"✅ {len(df_prefiltered)} rows passed prefilter and keyword check.")
 
-    # LLM extraction with progress bar
+    # LLM extraction 
     tqdm.pandas(desc="LLM extracting address + keywords")
     results = df_prefiltered["transcription"].progress_apply(extract_location_and_keywords)
     df_prefiltered["address"] = results.apply(lambda x: x[0])
