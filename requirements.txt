@@ -1,13 +1,18 @@
+# Core dependencies
 pandas==2.1.0
-requests==2.31.0ß
+requests==2.31.0
 spacy==3.6.0
+tqdm==4.66.0
+
+# pip-only dependencies
+pydantic<2
 usaddress==0.5.10
 paramiko==3.2.0
 runpod==1.7.13
 gspread==5.7.2
 oauth2client==4.1.3
 python-dotenv==1.0.1
-tqdm==4.66.0
-pydantic<2
 colorlog==6.9.0
 
+# spaCy model
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0-py3-none-any.whl
