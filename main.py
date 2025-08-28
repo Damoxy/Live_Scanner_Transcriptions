@@ -293,7 +293,7 @@ def main():
     logger.info("Loading spaCy model 'en_core_web_sm'...")
     nlp = spacy.load("en_core_web_sm")
 
-    # Prefilter addresses 
+    # Prefilter addresses with progress bar
     tqdm.pandas(desc="Prefilter addresses")
     df["prefilter_address"] = df["transcription"].progress_apply(lambda x: extract_address_prefilter(x, nlp))
     df_prefiltered = df[
@@ -304,7 +304,7 @@ def main():
     ].copy()
     logger.info(f"✅ {len(df_prefiltered)} rows passed prefilter and keyword check.")
 
-    # LLM extraction 
+    # LLM extraction with progress bar
     tqdm.pandas(desc="LLM extracting address + keywords")
     results = df_prefiltered["transcription"].progress_apply(extract_location_and_keywords)
     df_prefiltered["address"] = results.apply(lambda x: x[0])
