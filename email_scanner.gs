@@ -1,6 +1,9 @@
-function sendYesterdayEmailAsPDF() {
+ function sendYesterdayEmailAsPDF() {
   const sheetName = "output";
-  const emailRecipient = " ";
+  const emailRecipients = [
+    "dan@solvinghomesales.com",
+    "sufyanmanzoor110@gmail.com "
+  ];
 
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   const data = sheet.getDataRange().getValues();
@@ -89,12 +92,13 @@ function sendYesterdayEmailAsPDF() {
 
   // Send email with PDF
   MailApp.sendEmail({
-    to: emailRecipient,
+    to: emailRecipients.join(","), // join into comma-separated string
     subject: "Scanner Report - " + yesterday.toDateString(),
-    htmlBody: "Hi,<br><br>Please find attached the scanner report for <b>" + yesterday.toDateString() + "</b>.<br><br>Regards,<br>Scanner Auto Extractor",
+    htmlBody: "Hi,<br><br>Please find attached the scanner report for <b>" 
+              + yesterday.toDateString() + "</b>.<br><br>Regards,<br>Scanner Auto Extractor",
     name: "Scanner Auto Extractor",
     attachments: [blob]
   });
 
-  Logger.log("PDF sent to " + emailRecipient);
+  Logger.log("PDF sent to: " + emailRecipients.join(", "));
 }
